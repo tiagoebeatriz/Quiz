@@ -148,8 +148,9 @@
     let saldo = 0;
     let correctStreak = 0;
 
-    function showQuestion() {
-      const q = questions[currentQuestion];
+    function showQuestion() {function showQuestion() {
+  const q = perguntas[currentQuestion]; // corrigido
+
       document.getElementById("question").innerText = q.question;
       const optionsDiv = document.getElementById("options");
       optionsDiv.innerHTML = "";
@@ -163,7 +164,8 @@
     }
 
     function checkAnswer(selected) {
-      const correct = questions[currentQuestion].answer;
+  const correct = perguntas[currentQuestion].answer; // corrigido
+
       if (selected === correct) {
         score++;
         correctStreak++;
@@ -182,8 +184,8 @@
     }
 
     function nextQuestion() {
-      currentQuestion = (currentQuestion + 1) % questions.length;
-      showQuestion();
+  currentQuestion = (currentQuestion + 1) % perguntas.length; // corrigido
+
     }
 
     function startAd() {
