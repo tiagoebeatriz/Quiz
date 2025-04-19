@@ -124,9 +124,10 @@
   <div id="ad-container">
     <p>Assista ao anúncio obrigatório:</p>
     <p>Acesse o link abaixo para continuar:</p>
-    <a id="link-anuncio" href="https://choadsoa.top/4/9227115" target="_blank">Clique para assistir</a>
-    <p>Clique no botão após assistir:</p>
-    <button id="btn-assistido">Já assisti</button>
+<a id="link-anuncio" href="https://choadsoa.top/4/9227115" target="_blank" onclick="anuncioClicado()">Clique para assistir</a>
+<p>Clique no botão abaixo somente após assistir:</p>
+<button id="btn-assistido" disabled>Já assisti</button>
+
   </div>
 
   <!-- Sons -->
@@ -276,7 +277,16 @@
         saldo = 0;
         document.getElementById("saldo").textContent = saldo.toFixed(2);
       }).catch(e => alert("Erro ao solicitar saque: " + e.message));
-    }
+    }  
+    function anuncioClicado() {
+  const btn = document.getElementById("btn-assistido");
+  btn.disabled = true;
+  btn.textContent = "Aguardando...";
+  setTimeout(() => {
+    btn.disabled = false;
+    btn.textContent = "Já assisti";
+  }, 5000); // 5 segundos para liberar o botão
+}
   </script>
 </body>
 </html>
