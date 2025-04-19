@@ -202,12 +202,29 @@
     }
 
     function showAd(callback) {
-      document.getElementById("ad-container").style.display = "flex";
-      document.getElementById("btn-assistido").onclick = () => {
-        document.getElementById("ad-container").style.display = "none";
-        callback();
-      };
-    }
+  document.getElementById("ad-container").style.display = "flex";
+  const botao = document.getElementById("btn-assistido");
+  botao.disabled = true;
+  botao.textContent = "Já assisti (bloqueado)";
+  
+  // Aguarda clique no link para liberar
+  botao.onclick = () => {
+    document.getElementById("ad-container").style.display = "none";
+    callback();
+  };
+}
+
+function anuncioClicado() {
+  const botao = document.getElementById("btn-assistido");
+  botao.disabled = true;
+  botao.textContent = "Verificando...";
+  
+  setTimeout(() => {
+    botao.disabled = false;
+    botao.textContent = "Já assisti";
+  }, 5000); // tempo mínimo de visualização
+}
+
 
     function closeAd() {
       document.getElementById("ad-container").style.display = "none";
