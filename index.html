@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <title>Quiz Premiado</title>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -83,13 +86,25 @@
 </head>
 <body>
   <div id="auth-container">
-    <h2>Login ou Cadastro</h2>
-    <input id="email" placeholder="Email"><br><br>
-    <input id="senha" type="password" placeholder="Senha"><br><br>
-    <button onclick="login()">Entrar</button>
-    <button onclick="register()">Cadastrar</button>
-    <p><a href="#" onclick="resetPassword()">Esqueceu a senha?</a></p>
-  </div>
+  <h2>Login</h2>
+  <input id="email" placeholder="Email"><br><br>
+  <input id="senha" type="password" placeholder="Senha"><br><br>
+  <button onclick="login()">Entrar</button>
+  <button onclick="mostrarCadastro()">Criar Conta</button>
+  <p><a href="#" onclick="resetPassword()">Esqueceu a senha?</a></p>
+</div>
+<div id="register-container" style="display:none;">
+  <h2>Criar Conta</h2>
+  <input id="reg-email" placeholder="Email"><br><br>
+  <input id="reg-senha" type="password" placeholder="Senha"><br><br>
+  <input id="reg-confirma" type="password" placeholder="Repetir Senha"><br><br>
+  <input id="reg-cidade" placeholder="Cidade"><br><br>
+  <input id="reg-estado" placeholder="Estado"><br><br>
+  <input id="reg-telefone" placeholder="Telefone"><br><br>
+  <button onclick="criarConta()">Cadastrar</button><br><br>
+  <a href="#" onclick="mostrarLogin()">Já tenho conta</a>
+</div>
+
 
   <div id="quiz-container">
     <h1>Quiz Premiado</h1>
@@ -105,9 +120,10 @@
   <div id="ad-container">
     <p>Assista ao anúncio obrigatório:</p>
     <p>Acesse o link abaixo para continuar:</p>
-    <a href="https://choadsoa.top/4/9227115" target="_blank">Clique para assistir</a>
-    <p>Clique no botão após assistir:</p>
-    <button onclick="closeAd()">Já assisti</button>
+    <a id="link-anuncio" href="https://choadsoa.top/4/9227115" target="_blank">Clique para assistir</a>
+     <p>Clique no botão após assistir:</p>
+    <button id="btn-assistido" onclick="closeAd()">Já assisti</button>
+
   </div>
 
   <audio id="som-acerto" src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_68571982ba.mp3" preload="auto"></audio>
@@ -124,6 +140,7 @@
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    const db = firebase.firestore();
 
     auth.onAuthStateChanged(user => {
       if (user) {
@@ -210,9 +227,25 @@
     }
 
     function showAd(callback) {
-      window.adCallback = callback;
-      document.getElementById("ad-container").style.display = "flex";
-    }
+  window.adCallback = callback;
+  document.getElementById("ad-container").style.display = "flex";
+
+  const botao = document.getElementById("btn-assistido");
+  botao.disabled = true;
+  botao.innerText = "Assista o anúncio primeiro";
+
+  const link = document.getElementById("link-anuncio");
+
+  // Remove qualquer evento anterior (evita múltiplos handlers)
+  link.onclick = null;
+
+  // Quando clicar no link, libera o botão
+  link.onclick = () => {
+    botao.disabled = false;
+    botao.innerText = "Já assisti";
+  };
+}
+
 
     function closeAd() {
       document.getElementById("ad-container").style.display = "none";
@@ -220,16 +253,78 @@
     }
 
     function solicitarSaque() {
-      const valor = saldo.toFixed(2);
-      if (valor >= 30) {
-        const email = prompt("Digite seu e-mail do PayPal:");
-        if (email) {
-          alert("Saque de $" + valor + " solicitado para " + email + ". Aguarde o processamento.");
-        }
-      } else {
-        alert("Você precisa de pelo menos $30.00 para sacar. Continue jogando!");
-      }
+  const valor = saldo.toFixed(2);
+  if (valor >= 30) {
+    const emailPaypal = prompt("Digite seu e-mail do PayPal:");
+    if (emailPaypal) {
+      const user = auth.currentUser;
+      db.collection("saques").add({
+        uid: user.uid,
+        emailFirebase: user.email,
+        emailPaypal: emailPaypal,
+        valor: parseFloat(valor),
+        data: new Date().toISOString()
+      }).then(() => {
+        alert("Saque solicitado com sucesso! Aguarde o pagamento.");
+        saldo = 0;
+        document.getElementById("saldo").innerText = saldo.toFixed(2);
+      }).catch(e => {
+        alert("Erro ao registrar saque: " + e.message);
+      });
     }
+  } else {
+    alert("Você precisa de pelo menos $30.00 para sacar.");
+  }
+}
+const db = firebase.firestore();
+
+function mostrarCadastro() {
+  document.getElementById("auth-container").style.display = "none";
+  document.getElementById("register-container").style.display = "block";
+}
+
+function mostrarLogin() {
+  document.getElementById("register-container").style.display = "none";
+  document.getElementById("auth-container").style.display = "block";
+}
+
+function criarConta() {
+  const email = document.getElementById("reg-email").value;
+  const senha = document.getElementById("reg-senha").value;
+  const confirma = document.getElementById("reg-confirma").value;
+  const cidade = document.getElementById("reg-cidade").value;
+  const estado = document.getElementById("reg-estado").value;
+  const telefone = document.getElementById("reg-telefone").value;
+
+  if (!email || !senha || !confirma || !cidade || !estado || !telefone) {
+    alert("Preencha todos os campos.");
+    return;
+  }
+
+  if (senha !== confirma) {
+    alert("As senhas não coincidem.");
+    return;
+  }
+
+  firebase.auth().createUserWithEmailAndPassword(email, senha)
+    .then((userCredential) => {
+      const uid = userCredential.user.uid;
+      return db.collection("usuarios").doc(uid).set({
+        email,
+        cidade,
+        estado,
+        telefone
+      });
+    })
+    .then(() => {
+      alert("Conta criada com sucesso!");
+      mostrarLogin();
+    })
+    .catch((error) => {
+      alert("Erro: " + error.message);
+    });
+}
+
   </script>
 </body>
 </html>
