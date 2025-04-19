@@ -1,248 +1,190 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>Quiz Premiado</title>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #1abc9c, #3498db);
-      margin: 0;
-      padding: 0;
-      text-align: center;
+      background: linear-gradient(to right, #1e90ff, #00bfff);
       color: white;
+      text-align: center;
+      padding: 30px;
     }
-    h1 {
-      margin-top: 20px;
-    }
-    #quiz-container {
+    #quiz-container, #auth-container {
       max-width: 600px;
       margin: auto;
+      background: rgba(0,0,0,0.2);
       padding: 20px;
-      background: rgba(0,0,0,0.3);
       border-radius: 15px;
+      display: none;
+    }
+    .question {
+      font-size: 24px;
+      margin-bottom: 20px;
+      animation: fadeIn 0.5s;
     }
     .option {
-      background: #ffffff33;
-      margin: 10px;
+      background: white;
+      color: #333;
       padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .option:hover {
+      background: #d3d3d3;
+    }
+    #score-saldo {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+    #paypal-button, #logout-button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 18px;
+      background: #ffc439;
+      color: black;
+      border: none;
       border-radius: 10px;
       cursor: pointer;
     }
-    .option:hover {
-      background: #ffffff55;
-    }
     #ad-container {
-      display: none;
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.9);
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background: rgba(0,0,0,0.95);
+      display: none;
       justify-content: center;
       align-items: center;
-      z-index: 1000;
-      flex-direction: column;
-      padding: 20px;
-    }
-    #auth-container, #register-container {
-      margin-top: 20px;
-    }
-    input {
-      margin: 5px;
-      padding: 10px;
-      width: 80%;
-      border: none;
-      border-radius: 8px;
-    }
-    button {
-      margin: 10px;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 8px;
-      background: #2ecc71;
+      z-index: 999;
       color: white;
-      font-weight: bold;
-      cursor: pointer;
+      font-size: 24px;
+      flex-direction: column;
     }
-    button:hover {
-      background: #27ae60;
+    #ad-container a {
+      background: yellow;
+      color: black;
+      padding: 10px;
+      margin-top: 15px;
+      font-weight: bold;
+      border-radius: 8px;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
     }
   </style>
 </head>
 <body>
-  <h1>Quiz Premiado</h1>
 
+  <!-- Login/Cadastro -->
   <div id="auth-container">
     <h2>Login</h2>
-    <input type="email" id="email" placeholder="Seu e-mail"><br>
-    <input type="password" id="senha" placeholder="Sua senha"><br>
+    <input id="email" placeholder="Email"><br><br>
+    <input id="senha" type="password" placeholder="Senha"><br><br>
     <button onclick="login()">Entrar</button>
-    <button onclick="recuperarSenha()">Esqueci a senha</button>
-    <p>Ainda não tem conta? <a href="#" onclick="mostrarCadastro()">Cadastre-se</a></p>
+    <button onclick="mostrarCadastro()">Criar Conta</button>
+    <p><a href="#" onclick="resetPassword()">Esqueceu a senha?</a></p>
   </div>
 
-  <div id="register-container" style="display: none;">
+  <div id="register-container" style="display:none;">
     <h2>Criar Conta</h2>
-    <input type="email" id="reg-email" placeholder="E-mail"><br>
-    <input type="password" id="reg-senha" placeholder="Senha"><br>
-    <input type="password" id="reg-confirma" placeholder="Confirme a senha"><br>
-    <button onclick="criarConta()">Cadastrar</button>
-    <p>Já tem conta? <a href="#" onclick="mostrarLogin()">Entrar</a></p>
+    <input id="reg-email" placeholder="Email"><br><br>
+    <input id="reg-senha" type="password" placeholder="Senha"><br><br>
+    <input id="reg-confirma" type="password" placeholder="Repetir Senha"><br><br>
+    <input id="reg-cidade" placeholder="Cidade"><br><br>
+    <input id="reg-estado" placeholder="Estado"><br><br>
+    <input id="reg-telefone" placeholder="Telefone"><br><br>
+    <button onclick="criarConta()">Cadastrar</button><br><br>
+    <a href="#" onclick="mostrarLogin()">Já tenho conta</a>
   </div>
 
-  <div id="quiz-container" style="display:none;">
-    <p><strong>Pontuação:</strong> <span id="score">0</span></p>
-    <p><strong>Saldo:</strong> $<span id="saldo">0.00</span></p>
-    <div id="question"></div>
+  <!-- Quiz -->
+  <div id="quiz-container">
+    <h1>Quiz Premiado</h1>
+    <div class="question" id="question">Carregando pergunta...</div>
     <div id="options"></div>
-    <button onclick="solicitarSaque()">Sacar via PayPal</button>
+    <div id="score-saldo">
+      Pontos: <span id="score">0</span> | Saldo: $<span id="saldo">0.00</span>
+    </div>
+    <button id="paypal-button" onclick="solicitarSaque()">Sacar via PayPal</button>
+    <button id="logout-button" onclick="logout()">Sair</button>
   </div>
 
+  <!-- Anúncio -->
   <div id="ad-container">
-    <h2>Assista ao anúncio</h2>
-    <p>Esse conteúdo é obrigatório para continuar jogando!</p>
-    <button id="btn-assistido">Já assisti</button>
+    <p>Assista ao anúncio obrigatório:</p>
+    <p>Acesse o link abaixo para continuar:</p>
+    <a id="link-anuncio" href="https://choadsoa.top/4/9227115" target="_blank">Clique para assistir</a>
+    <p>Clique no botão após assistir:</p>
+    <button id="btn-assistido" onclick="closeAd()">Já assisti</button>
   </div>
 
-  <audio id="som-acerto" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9c93107b7f.mp3" preload="auto"></audio>
-  <audio id="som-erro" src="https://cdn.pixabay.com/download/audio/2021/10/20/audio_c43e0654c8.mp3" preload="auto"></audio>
+  <!-- Sons -->
+  <audio id="som-acerto" src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_68571982ba.mp3" preload="auto"></audio>
+  <audio id="som-erro" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_3ff8b4c210.mp3" preload="auto"></audio>
 
-  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+  <!-- Firebase e Funções -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCPinA4hvn9O6ZDuXXE8xlrqJn3Uf23fxU",
       authDomain: "quiz-game-e20c3.firebaseapp.com",
       projectId: "quiz-game-e20c3",
       storageBucket: "quiz-game-e20c3.appspot.com",
-      messagingSenderId: "279058348728",
-      appId: "1:279058348728:web:b8df2ec6b4e83b1a4d1322"
+      messagingSenderId: "79731980565",
+      appId: "1:79731980565:web:2c2eba3398a899acdfd11c"
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-  </script>
+    const db = firebase.firestore();
 
-  <script>
-    const perguntas = [
-      {
-        q: "Qual é a raiz quadrada de 144?",
-        options: ["11", "12", "13", "14"],
-        answer: 1
-      },
-      {
-        q: "Quem pintou a Mona Lisa?",
-        options: ["Michelangelo", "Van Gogh", "Leonardo da Vinci", "Picasso"],
-        answer: 2
-      },
-      {
-        q: "Qual o símbolo químico do ouro?",
-        options: ["Au", "Ag", "O", "Gd"],
-        answer: 0
-      }
-    ];
-
-    let score = 0;
-    let saldo = 0;
-    let perguntaAtual = 0;
-
-    function showQuestion() {
-      const p = perguntas[perguntaAtual];
-      if (!p) {
-        document.getElementById("question").textContent = "Fim do quiz!";
-        document.getElementById("options").innerHTML = "";
-        return;
-      }
-
-      document.getElementById("question").textContent = p.q;
-      document.getElementById("options").innerHTML = "";
-
-      p.options.forEach((opt, i) => {
-        const btn = document.createElement("div");
-        btn.className = "option";
-        btn.textContent = opt;
-        btn.onclick = () => responder(i);
-        document.getElementById("options").appendChild(btn);
-      });
-    }
-
-    function responder(index) {
-      const correta = perguntas[perguntaAtual].answer;
-      const somAcerto = document.getElementById("som-acerto");
-      const somErro = document.getElementById("som-erro");
-
-      if (index === correta) {
-        score++;
-        saldo += 0.10;
-        somAcerto.play();
-        if (score % 2 === 0) {
-          showAd(() => {
-            perguntaAtual++;
-            showQuestion();
-          });
-          return;
-        }
+    // Login/logout
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById("auth-container").style.display = "none";
+        document.getElementById("register-container").style.display = "none";
+        document.getElementById("quiz-container").style.display = "block";
+        showAd(() => showQuestion());
       } else {
-        somErro.play();
-        showAd(() => {
-          perguntaAtual++;
-          showQuestion();
-        });
-        return;
+        document.getElementById("auth-container").style.display = "block";
+        document.getElementById("register-container").style.display = "none";
+        document.getElementById("quiz-container").style.display = "none";
       }
-
-      perguntaAtual++;
-      showQuestion();
-      atualizarPontuacao();
-    }
-
-    function atualizarPontuacao() {
-      document.getElementById("score").textContent = score;
-      document.getElementById("saldo").textContent = saldo.toFixed(2);
-    }
-
-    function showAd(callback) {
-      const adContainer = document.getElementById("ad-container");
-      adContainer.style.display = "flex";
-      document.getElementById("btn-assistido").onclick = function () {
-        adContainer.style.display = "none";
-        if (callback) callback();
-      };
-    }
-
-    function closeAd() {
-      document.getElementById("ad-container").style.display = "none";
-      showQuestion();
-    }
+    });
 
     function login() {
       const email = document.getElementById("email").value;
       const senha = document.getElementById("senha").value;
-      auth.signInWithEmailAndPassword(email, senha)
-        .then(() => {
-          document.getElementById("auth-container").style.display = "none";
-          document.getElementById("quiz-container").style.display = "block";
-          showAd(() => showQuestion());
-        })
-        .catch(e => alert("Erro ao logar: " + e.message));
-    }
-
-    function recuperarSenha() {
-      const email = document.getElementById("email").value;
-      auth.sendPasswordResetEmail(email)
-        .then(() => alert("E-mail de recuperação enviado!"))
-        .catch(e => alert("Erro: " + e.message));
+      auth.signInWithEmailAndPassword(email, senha).catch(e => alert("Erro: " + e.message));
     }
 
     function criarConta() {
       const email = document.getElementById("reg-email").value;
       const senha = document.getElementById("reg-senha").value;
       const confirma = document.getElementById("reg-confirma").value;
-
-      if (senha !== confirma) return alert("As senhas não coincidem.");
-
+      if (senha !== confirma) return alert("As senhas não conferem.");
       auth.createUserWithEmailAndPassword(email, senha)
-        .then(() => alert("Conta criada! Faça login."))
+        .then(() => alert("Conta criada com sucesso!"))
         .catch(e => alert("Erro: " + e.message));
+    }
+
+    function resetPassword() {
+      const email = document.getElementById("email").value;
+      if (!email) return alert("Digite o e-mail para redefinir a senha.");
+      auth.sendPasswordResetEmail(email).then(() => alert("Email de recuperação enviado!")).catch(e => alert("Erro: " + e.message));
+    }
+
+    function logout() {
+      auth.signOut();
     }
 
     function mostrarCadastro() {
@@ -255,17 +197,84 @@
       document.getElementById("register-container").style.display = "none";
     }
 
-    function solicitarSaque() {
-      alert("Para sacar, envie um e-mail para thiagoebeatriz2012@gmail.com com seu login.");
+    // Ad
+    function showAd(callback) {
+      document.getElementById("ad-container").style.display = "flex";
+      document.getElementById("btn-assistido").onclick = () => {
+        document.getElementById("ad-container").style.display = "none";
+        callback();
+      };
     }
 
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        document.getElementById("auth-container").style.display = "none";
-        document.getElementById("quiz-container").style.display = "block";
-        showAd(() => showQuestion());
+    function closeAd() {
+      document.getElementById("ad-container").style.display = "none";
+    }
+
+    // Quiz
+    let score = 0;
+    let saldo = 0.00;
+    let currentQuestion = 0;
+
+    const perguntas = [
+      { q: "Qual é o número primo mais próximo de 10.000?", options: ["9973", "10007", "10009", "9999"], answer: 1 },
+      { q: "Quem resolveu o Último Teorema de Fermat?", options: ["Andrew Wiles", "Pierre de Fermat", "Leonhard Euler", "Carl Gauss"], answer: 0 },
+      // ... adicione mais perguntas como já está no seu código
+    ];
+
+    function showQuestion() {
+      const q = perguntas[currentQuestion];
+      document.getElementById("question").textContent = q.q;
+      const optionsDiv = document.getElementById("options");
+      optionsDiv.innerHTML = "";
+      q.options.forEach((opt, i) => {
+        const div = document.createElement("div");
+        div.className = "option";
+        div.textContent = opt;
+        div.onclick = () => checkAnswer(i);
+        optionsDiv.appendChild(div);
+      });
+    }
+
+    function checkAnswer(selected) {
+      const q = perguntas[currentQuestion];
+      if (selected === q.answer) {
+        score++;
+        saldo += 0.10;
+        document.getElementById("som-acerto").play();
+        if (score % 2 === 0) {
+          showAd(() => nextQuestion());
+        } else {
+          nextQuestion();
+        }
+      } else {
+        document.getElementById("som-erro").play();
+        showAd(() => nextQuestion());
       }
-    });
+      document.getElementById("score").textContent = score;
+      document.getElementById("saldo").textContent = saldo.toFixed(2);
+    }
+
+    function nextQuestion() {
+      currentQuestion++;
+      if (currentQuestion >= perguntas.length) {
+        alert("Você completou todas as perguntas!");
+        currentQuestion = 0;
+      }
+      showQuestion();
+    }
+
+    function solicitarSaque() {
+      const email = auth.currentUser.email;
+      db.collection("saques").add({
+        email: email,
+        valor: saldo,
+        data: new Date().toISOString()
+      }).then(() => {
+        alert("Solicitação enviada! Pagamento em até 24h.");
+        saldo = 0;
+        document.getElementById("saldo").textContent = saldo.toFixed(2);
+      }).catch(e => alert("Erro ao solicitar saque: " + e.message));
+    }
   </script>
 </body>
 </html>
