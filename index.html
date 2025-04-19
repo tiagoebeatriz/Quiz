@@ -1,375 +1,271 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Quiz Premiado</title>
-  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
-
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: linear-gradient(to right, #1e90ff, #00bfff);
-      color: white;
+      background: linear-gradient(135deg, #1abc9c, #3498db);
+      margin: 0;
+      padding: 0;
       text-align: center;
-      padding: 30px;
+      color: white;
     }
-    #quiz-container, #auth-container {
+    h1 {
+      margin-top: 20px;
+    }
+    #quiz-container {
       max-width: 600px;
       margin: auto;
-      background: rgba(0,0,0,0.2);
       padding: 20px;
+      background: rgba(0,0,0,0.3);
       border-radius: 15px;
-      display: none;
-    }
-    .question {
-      font-size: 24px;
-      margin-bottom: 20px;
-      animation: fadeIn 0.5s;
     }
     .option {
-      background: white;
-      color: #333;
+      background: #ffffff33;
+      margin: 10px;
       padding: 10px;
-      margin: 10px 0;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    .option:hover {
-      background: #d3d3d3;
-    }
-    #score-saldo {
-      margin-top: 20px;
-      font-size: 18px;
-    }
-    #paypal-button, #logout-button {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 18px;
-      background: #ffc439;
-      color: black;
-      border: none;
       border-radius: 10px;
       cursor: pointer;
     }
+    .option:hover {
+      background: #ffffff55;
+    }
     #ad-container {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 100%;
-      background: rgba(0,0,0,0.95);
       display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.9);
       justify-content: center;
       align-items: center;
-      z-index: 999;
-      color: white;
-      font-size: 24px;
+      z-index: 1000;
       flex-direction: column;
+      padding: 20px;
     }
-    #ad-container a {
-      background: yellow;
-      color: black;
+    #auth-container, #register-container {
+      margin-top: 20px;
+    }
+    input {
+      margin: 5px;
       padding: 10px;
-      margin-top: 15px;
-      font-weight: bold;
+      width: 80%;
+      border: none;
       border-radius: 8px;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background: #2ecc71;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #27ae60;
     }
   </style>
 </head>
 <body>
+  <h1>Quiz Premiado</h1>
+
   <div id="auth-container">
-  <h2>Login</h2>
-  <input id="email" placeholder="Email"><br><br>
-  <input id="senha" type="password" placeholder="Senha"><br><br>
-  <button onclick="login()">Entrar</button>
-  <button onclick="mostrarCadastro()">Criar Conta</button>
-  <p><a href="#" onclick="resetPassword()">Esqueceu a senha?</a></p>
-</div>
-<div id="register-container" style="display:none;">
-  <h2>Criar Conta</h2>
-  <input id="reg-email" placeholder="Email"><br><br>
-  <input id="reg-senha" type="password" placeholder="Senha"><br><br>
-  <input id="reg-confirma" type="password" placeholder="Repetir Senha"><br><br>
-  <input id="reg-cidade" placeholder="Cidade"><br><br>
-  <input id="reg-estado" placeholder="Estado"><br><br>
-  <input id="reg-telefone" placeholder="Telefone"><br><br>
-  <button onclick="criarConta()">Cadastrar</button><br><br>
-  <a href="#" onclick="mostrarLogin()">Já tenho conta</a>
-</div>
+    <h2>Login</h2>
+    <input type="email" id="email" placeholder="Seu e-mail"><br>
+    <input type="password" id="senha" placeholder="Sua senha"><br>
+    <button onclick="login()">Entrar</button>
+    <button onclick="recuperarSenha()">Esqueci a senha</button>
+    <p>Ainda não tem conta? <a href="#" onclick="mostrarCadastro()">Cadastre-se</a></p>
+  </div>
 
+  <div id="register-container" style="display: none;">
+    <h2>Criar Conta</h2>
+    <input type="email" id="reg-email" placeholder="E-mail"><br>
+    <input type="password" id="reg-senha" placeholder="Senha"><br>
+    <input type="password" id="reg-confirma" placeholder="Confirme a senha"><br>
+    <button onclick="criarConta()">Cadastrar</button>
+    <p>Já tem conta? <a href="#" onclick="mostrarLogin()">Entrar</a></p>
+  </div>
 
-  <div id="quiz-container">
-    <h1>Quiz Premiado</h1>
-    <div class="question" id="question">Carregando pergunta...</div>
+  <div id="quiz-container" style="display:none;">
+    <p><strong>Pontuação:</strong> <span id="score">0</span></p>
+    <p><strong>Saldo:</strong> $<span id="saldo">0.00</span></p>
+    <div id="question"></div>
     <div id="options"></div>
-    <div id="score-saldo">
-      Pontos: <span id="score">0</span> | Saldo: $<span id="saldo">0.00</span>
-    </div>
-    <button id="paypal-button" onclick="solicitarSaque()">Sacar via PayPal</button>
-    <button id="logout-button" onclick="logout()">Sair</button>
+    <button onclick="solicitarSaque()">Sacar via PayPal</button>
   </div>
 
   <div id="ad-container">
-    <p>Assista ao anúncio obrigatório:</p>
-    <p>Acesse o link abaixo para continuar:</p>
-    <a id="link-anuncio" href="https://choadsoa.top/4/9227115" target="_blank">Clique para assistir</a>
-     <p>Clique no botão após assistir:</p>
-    <button id="btn-assistido" onclick="closeAd()">Já assisti</button>
-
+    <h2>Assista ao anúncio</h2>
+    <p>Esse conteúdo é obrigatório para continuar jogando!</p>
+    <button id="btn-assistido">Já assisti</button>
   </div>
 
-  <audio id="som-acerto" src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_68571982ba.mp3" preload="auto"></audio>
-  <audio id="som-erro" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_3ff8b4c210.mp3" preload="auto"></audio>
+  <audio id="som-acerto" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9c93107b7f.mp3" preload="auto"></audio>
+  <audio id="som-erro" src="https://cdn.pixabay.com/download/audio/2021/10/20/audio_c43e0654c8.mp3" preload="auto"></audio>
 
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCPinA4hvn9O6ZDuXXE8xlrqJn3Uf23fxU",
       authDomain: "quiz-game-e20c3.firebaseapp.com",
       projectId: "quiz-game-e20c3",
       storageBucket: "quiz-game-e20c3.appspot.com",
-      messagingSenderId: "79731980565",
-      appId: "1:79731980565:web:2c2eba3398a899acdfd11c"
+      messagingSenderId: "279058348728",
+      appId: "1:279058348728:web:b8df2ec6b4e83b1a4d1322"
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-    const db = firebase.firestore();
+  </script>
+
+  <script>
+    const perguntas = [
+      {
+        q: "Qual é a raiz quadrada de 144?",
+        options: ["11", "12", "13", "14"],
+        answer: 1
+      },
+      {
+        q: "Quem pintou a Mona Lisa?",
+        options: ["Michelangelo", "Van Gogh", "Leonardo da Vinci", "Picasso"],
+        answer: 2
+      },
+      {
+        q: "Qual o símbolo químico do ouro?",
+        options: ["Au", "Ag", "O", "Gd"],
+        answer: 0
+      }
+    ];
+
+    let score = 0;
+    let saldo = 0;
+    let perguntaAtual = 0;
+
+    function showQuestion() {
+      const p = perguntas[perguntaAtual];
+      if (!p) {
+        document.getElementById("question").textContent = "Fim do quiz!";
+        document.getElementById("options").innerHTML = "";
+        return;
+      }
+
+      document.getElementById("question").textContent = p.q;
+      document.getElementById("options").innerHTML = "";
+
+      p.options.forEach((opt, i) => {
+        const btn = document.createElement("div");
+        btn.className = "option";
+        btn.textContent = opt;
+        btn.onclick = () => responder(i);
+        document.getElementById("options").appendChild(btn);
+      });
+    }
+
+    function responder(index) {
+      const correta = perguntas[perguntaAtual].answer;
+      const somAcerto = document.getElementById("som-acerto");
+      const somErro = document.getElementById("som-erro");
+
+      if (index === correta) {
+        score++;
+        saldo += 0.10;
+        somAcerto.play();
+        if (score % 2 === 0) {
+          showAd(() => {
+            perguntaAtual++;
+            showQuestion();
+          });
+          return;
+        }
+      } else {
+        somErro.play();
+        showAd(() => {
+          perguntaAtual++;
+          showQuestion();
+        });
+        return;
+      }
+
+      perguntaAtual++;
+      showQuestion();
+      atualizarPontuacao();
+    }
+
+    function atualizarPontuacao() {
+      document.getElementById("score").textContent = score;
+      document.getElementById("saldo").textContent = saldo.toFixed(2);
+    }
+
+    function showAd(callback) {
+      const adContainer = document.getElementById("ad-container");
+      adContainer.style.display = "flex";
+      document.getElementById("btn-assistido").onclick = function () {
+        adContainer.style.display = "none";
+        if (callback) callback();
+      };
+    }
+
+    function closeAd() {
+      document.getElementById("ad-container").style.display = "none";
+      showQuestion();
+    }
+
+    function login() {
+      const email = document.getElementById("email").value;
+      const senha = document.getElementById("senha").value;
+      auth.signInWithEmailAndPassword(email, senha)
+        .then(() => {
+          document.getElementById("auth-container").style.display = "none";
+          document.getElementById("quiz-container").style.display = "block";
+          showAd(() => showQuestion());
+        })
+        .catch(e => alert("Erro ao logar: " + e.message));
+    }
+
+    function recuperarSenha() {
+      const email = document.getElementById("email").value;
+      auth.sendPasswordResetEmail(email)
+        .then(() => alert("E-mail de recuperação enviado!"))
+        .catch(e => alert("Erro: " + e.message));
+    }
+
+    function criarConta() {
+      const email = document.getElementById("reg-email").value;
+      const senha = document.getElementById("reg-senha").value;
+      const confirma = document.getElementById("reg-confirma").value;
+
+      if (senha !== confirma) return alert("As senhas não coincidem.");
+
+      auth.createUserWithEmailAndPassword(email, senha)
+        .then(() => alert("Conta criada! Faça login."))
+        .catch(e => alert("Erro: " + e.message));
+    }
+
+    function mostrarCadastro() {
+      document.getElementById("auth-container").style.display = "none";
+      document.getElementById("register-container").style.display = "block";
+    }
+
+    function mostrarLogin() {
+      document.getElementById("auth-container").style.display = "block";
+      document.getElementById("register-container").style.display = "none";
+    }
+
+    function solicitarSaque() {
+      alert("Para sacar, envie um e-mail para thiagoebeatriz2012@gmail.com com seu login.");
+    }
 
     auth.onAuthStateChanged(user => {
       if (user) {
         document.getElementById("auth-container").style.display = "none";
         document.getElementById("quiz-container").style.display = "block";
         showAd(() => showQuestion());
-      } else {
-        document.getElementById("auth-container").style.display = "block";
-        document.getElementById("quiz-container").style.display = "none";
       }
     });
-
-    function login() {
-      const email = document.getElementById("email").value;
-      const senha = document.getElementById("senha").value;
-      auth.signInWithEmailAndPassword(email, senha).catch(e => alert("Erro: " + e.message));
-    }
-
-    function register() {
-      const email = document.getElementById("email").value;
-      const senha = document.getElementById("senha").value;
-      auth.createUserWithEmailAndPassword(email, senha).catch(e => alert("Erro: " + e.message));
-    }
-
-    function resetPassword() {
-      const email = document.getElementById("email").value;
-      if (!email) return alert("Digite o e-mail para redefinir a senha.");
-      auth.sendPasswordResetEmail(email).then(() => alert("Email de recuperação enviado!")).catch(e => alert("Erro: " + e.message));
-    }
-
-    function logout() {
-      auth.signOut();
-    }
-
-    const perguntas = [  { q: "Qual é o número primo mais próximo de 10.000?", options: ["9973", "10007", "10009", "9999"], answer: 1 },
-      { q: "Quem resolveu o Último Teorema de Fermat?", options: ["Andrew Wiles", "Pierre de Fermat", "Leonhard Euler", "Carl Gauss"], answer: 0 },
-      { q: "Qual é a função que cresce mais rápido que exponenciais, fatoriais e potências?", options: ["Função de Ackermann", "Função logarítmica", "Função exponencial", "Função polinomial"], answer: 0 },
-      { q: "Qual é a menor unidade de informação na computação quântica?", options: ["Qubit", "Byte", "Bit", "Quantum"], answer: 0 },
-      { q: "Em que ano foi publicada a Teoria da Relatividade Geral?", options: ["1915", "1905", "1925", "1930"], answer: 0 },
-      { q: "Quantos axiomas estão na base dos Números Naturais segundo Peano?", options: ["9", "5", "7", "10"], answer: 0 },
-      { q: "Qual é o nome da hipótese que afirma que todo número par maior que 2 é soma de dois primos?", options: ["Hipótese de Goldbach", "Conjectura de Collatz", "Conjectura de Riemann", "Teorema dos Números Primos"], answer: 0 },
-      { q: "Quantas dimensões existem segundo a teoria M (supercordas)?", options: ["11", "10", "9", "13"], answer: 0 },
-      { q: "Qual é o número de átomos no universo observável (ordem de grandeza)?", options: ["10^80", "10^60", "10^90", "10^100"], answer: 0 },
-      { q: "Quem criou a notação lambda usada na computação?", options: ["Alonzo Church", "Alan Turing", "Stephen Kleene", "John von Neumann"], answer: 0 },
-      { q: "Qual é o nome da constante que mede a razão entre a circunferência e o diâmetro de um círculo?", options: ["Pi", "Euler", "Phi", "Tau"], answer: 0 },
-      { q: "Quem formulou a equação de Schrödinger?", options: ["Erwin Schrödinger", "Niels Bohr", "Paul Dirac", "Werner Heisenberg"], answer: 0 },
-      { q: "Quantos elementos existem na tabela periódica? (2024)", options: ["118", "120", "116", "117"], answer: 0 },
-      { q: "Qual é o nome da menor partícula indivisível segundo o modelo padrão?", options: ["Quark", "Elétron", "Fóton", "Neutrino"], answer: 0 },
-      { q: "Qual é o nome da equação que descreve a segunda lei da termodinâmica?", options: ["ΔS ≥ 0", "PV = nRT", "E=mc^2", "F=ma"], answer: 0 },
-      { q: "Qual é o valor aproximado da constante de Planck?", options: ["6.626x10^-34 Js", "3.00x10^8 m/s", "1.602x10^-19 C", "9.81 m/s²"], answer: 0 },
-      { q: "Quem propôs a ideia de seleção natural?", options: ["Charles Darwin", "Gregor Mendel", "Isaac Newton", "Louis Pasteur"], answer: 0 },
-      { q: "Quantos segundos há em um ano bissexto?", options: ["31622400", "31536000", "31200000", "32000000"], answer: 0 },
-      { q: "Quem foi o matemático que criou o teorema de incompletude?", options: ["Kurt Gödel", "Bertrand Russell", "David Hilbert", "Georg Cantor"], answer: 0 },
-      { q: "O que representa o número de Avogadro?", options: ["Número de partículas por mol", "Número de elétrons em um átomo", "Volume de 1 mol", "Peso de 1 mol"], answer: 0 },
-
-      // 20 novas perguntas difíceis:
-      { q: "Qual é a solução da equação de Navier-Stokes em 3D com condições iniciais arbitrárias?", options: ["Desconhecida", "Zero", "Depende da massa", "Convergente"], answer: 0 },
-      { q: "Qual é o nome da estrutura matemática usada para descrever simetrias em física de partículas?", options: ["Grupo de Lie", "Espaço de Hilbert", "Álgebra de Boole", "Grupo de Galois"], answer: 0 },
-      { q: "Qual é o maior número conhecido como primo de Mersenne (em 2024)?", options: ["2^82589933 - 1", "2^57885161 - 1", "2^74207281 - 1", "2^3021377 - 1"], answer: 0 },
-      { q: "O que diz a hipótese de Riemann?", options: ["Todos os zeros não-triviais da função zeta têm parte real 1/2", "Os números primos são finitos", "Toda matriz é diagonalizável", "Toda função contínua é integrável"], answer: 0 },
-      { q: "Quem criou a topologia algébrica?", options: ["Henri Poincaré", "Leibniz", "Évariste Galois", "Emmy Noether"], answer: 0 },
-      { q: "Qual o nome do fenômeno onde partículas surgem do vácuo quântico?", options: ["Flutuação do vácuo", "Efeito Doppler", "Tunelamento quântico", "Colapso de função de onda"], answer: 0 },
-      { q: "O que significa NP ≠ P na ciência da computação?", options: ["Problemas verificáveis rapidamente não são necessariamente solucionáveis rapidamente", "Problemas simples não existem", "Todo problema tem solução", "Todo algoritmo é NP"], answer: 0 },
-      { q: "Qual é a equação da transformada de Fourier?", options: ["F(ω) = ∫f(t)e^(-iωt)dt", "F(x) = ax² + bx + c", "f(x) = sin(x) + cos(x)", "y = mx + b"], answer: 0 },
-      { q: "Qual é o significado da constante cosmológica em cosmologia?", options: ["Energia escura", "Gravidade", "Matéria escura", "Força centrípeta"], answer: 0 },
-      { q: "Quem propôs o modelo atômico com orbitais quantizados?", options: ["Niels Bohr", "Rutherford", "Demócrito", "Chadwick"], answer: 0 },
-      { q: "Em que campo se aplica a equação de Dirac?", options: ["Mecânica quântica relativística", "Termodinâmica", "Eletricidade", "Óptica"], answer: 0 },
-      { q: "Quem introduziu a noção de cardinalidade infinita?", options: ["Georg Cantor", "Aristóteles", "Pascal", "Euler"], answer: 0 },
-      { q: "O que é uma singularidade gravitacional?", options: ["Ponto onde a densidade é infinita", "Buraco de minhoca", "Estrela de nêutrons", "Gravidade zero"], answer: 0 },
-      { q: "Qual a unidade da constante de Boltzmann?", options: ["J/K", "N/m²", "C/s", "kg.m/s²"], answer: 0 },
-      { q: "O que mede o número de Reynolds?", options: ["Tipo de escoamento de fluido", "Velocidade da luz", "Força gravitacional", "Potencial elétrico"], answer: 0 },
-      { q: "Quem é o pai da teoria dos autômatos?", options: ["John von Neumann", "Turing", "Gödel", "Knuth"], answer: 0 },
-      { q: "Qual é a unidade de medida usada para expressar campo elétrico?", options: ["N/C", "J", "C", "Ω"], answer: 0 },
-      { q: "Quem formulou as equações de Maxwell?", options: ["James Clerk Maxwell", "Faraday", "Ampère", "Tesla"], answer: 0 },
-      { q: "O que é a constante de Euler-Mascheroni?", options: ["Limite entre a soma harmônica e o logaritmo", "Pi", "e", "Zero absoluto"], answer: 0 },
-      { q: "Quantos bits são necessários para representar todos os caracteres ASCII padrão?", options: ["7", "8", "6", "10"], answer: 0 }
-    
-    ]; // Use aqui suas 40 perguntas difíceis com opções embaralhadas e índice ajustado
-
-    let currentQuestion = 0, score = 0, saldo = 0, correctStreak = 0;
-
-    function showQuestion() {
-      const q = perguntas[currentQuestion];
-      const opcoes = [...q.options];
-      const indexOriginal = q.answer;
-      const respostaCorreta = opcoes[indexOriginal];
-      for (let i = opcoes.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [opcoes[i], opcoes[j]] = [opcoes[j], opcoes[i]];
-      }
-      const novaResposta = opcoes.indexOf(respostaCorreta);
-      perguntas[currentQuestion].answer = novaResposta;
-
-      document.getElementById("question").innerText = q.q;
-      const optionsDiv = document.getElementById("options");
-      optionsDiv.innerHTML = "";
-      opcoes.forEach((opt, i) => {
-        const btn = document.createElement("div");
-        btn.className = "option";
-        btn.innerText = opt;
-        btn.onclick = () => checkAnswer(i);
-        optionsDiv.appendChild(btn);
-      });
-    }
-
-    function checkAnswer(selected) {
-      const correto = perguntas[currentQuestion].answer;
-      if (selected === correto) {
-        score++;
-        correctStreak++;
-        saldo += 0.05;
-        document.getElementById("score").innerText = score;
-        document.getElementById("saldo").innerText = saldo.toFixed(2);
-        document.getElementById("som-acerto").play();
-        if (correctStreak % 2 === 0) showAd(() => nextQuestion());
-        else nextQuestion();
-      } else {
-        correctStreak = 0;
-        document.getElementById("som-erro").play();
-        showAd(() => nextQuestion());
-      }
-    }
-
-    function nextQuestion() {
-      currentQuestion = (currentQuestion + 1) % perguntas.length;
-      showQuestion();
-    }
-
-    function showAd(callback) {
-  window.adCallback = callback;
-  document.getElementById("ad-container").style.display = "flex";
-
-  const botao = document.getElementById("btn-assistido");
-  botao.disabled = true;
-  botao.innerText = "Assista o anúncio primeiro";
-
-  const link = document.getElementById("link-anuncio");
-
-  // Remove qualquer evento anterior (evita múltiplos handlers)
-  link.onclick = null;
-
-  // Quando clicar no link, libera o botão
-  link.onclick = () => {
-    botao.disabled = false;
-    botao.innerText = "Já assisti";
-  };
-}
-
-
-    function closeAd() {
-      document.getElementById("ad-container").style.display = "none";
-      if (typeof adCallback === 'function') adCallback();
-    }
-
-    function solicitarSaque() {
-  const valor = saldo.toFixed(2);
-  if (valor >= 30) {
-    const emailPaypal = prompt("Digite seu e-mail do PayPal:");
-    if (emailPaypal) {
-      const user = auth.currentUser;
-      db.collection("saques").add({
-        uid: user.uid,
-        emailFirebase: user.email,
-        emailPaypal: emailPaypal,
-        valor: parseFloat(valor),
-        data: new Date().toISOString()
-      }).then(() => {
-        alert("Saque solicitado com sucesso! Aguarde o pagamento.");
-        saldo = 0;
-        document.getElementById("saldo").innerText = saldo.toFixed(2);
-      }).catch(e => {
-        alert("Erro ao registrar saque: " + e.message);
-      });
-    }
-  } else {
-    alert("Você precisa de pelo menos $30.00 para sacar.");
-  }
-}
-const db = firebase.firestore();
-
-function mostrarCadastro() {
-  document.getElementById("auth-container").style.display = "none";
-  document.getElementById("register-container").style.display = "block";
-}
-
-function mostrarLogin() {
-  document.getElementById("register-container").style.display = "none";
-  document.getElementById("auth-container").style.display = "block";
-}
-
-function criarConta() {
-  const email = document.getElementById("reg-email").value;
-  const senha = document.getElementById("reg-senha").value;
-  const confirma = document.getElementById("reg-confirma").value;
-  const cidade = document.getElementById("reg-cidade").value;
-  const estado = document.getElementById("reg-estado").value;
-  const telefone = document.getElementById("reg-telefone").value;
-
-  if (!email || !senha || !confirma || !cidade || !estado || !telefone) {
-    alert("Preencha todos os campos.");
-    return;
-  }
-
-  if (senha !== confirma) {
-    alert("As senhas não coincidem.");
-    return;
-  }
-
-  firebase.auth().createUserWithEmailAndPassword(email, senha)
-    .then((userCredential) => {
-      const uid = userCredential.user.uid;
-      return db.collection("usuarios").doc(uid).set({
-        email,
-        cidade,
-        estado,
-        telefone
-      });
-    })
-    .then(() => {
-      alert("Conta criada com sucesso!");
-      mostrarLogin();
-    })
-    .catch((error) => {
-      alert("Erro: " + error.message);
-    });
-}
-
-    
-
   </script>
 </body>
 </html>
