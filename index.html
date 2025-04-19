@@ -175,7 +175,7 @@
       auth.signOut();
     }
 
-    const perguntas = [...]; // Use aqui suas 40 perguntas difíceis com opções embaralhadas e índice ajustado
+    const perguntas = [      ]; // Use aqui suas 40 perguntas difíceis com opções embaralhadas e índice ajustado
 
     let currentQuestion = 0, score = 0, saldo = 0, correctStreak = 0;
 
@@ -325,37 +325,7 @@ function criarConta() {
     });
 }
 
-    <button onclick="importarPerguntas()">Importar Perguntas</button>
-
-<script>
-const perguntas = [
-  {
-    q: "Qual é o número atômico do elemento rádio?",
-    options: ["86", "88", "90", "92"],
-    answer: 1
-  },
-  {
-    q: "Quem escreveu a obra 'A Divina Comédia'?",
-    options: ["Dante Alighieri", "Shakespeare", "Homero", "Maquiavel"],
-    answer: 0
-  },
-  {
-    q: "Quantos elementos químicos existem atualmente na Tabela Periódica?",
-    options: ["112", "114", "118", "120"],
-    answer: 2
-  }
-  // Aqui vão até 100 perguntas — posso te mandar todas já formatadas
-];
-
-function importarPerguntas() {
-  perguntas.forEach(p => {
-    firebase.firestore().collection("perguntas").add(p)
-      .then(() => console.log("Pergunta adicionada!"))
-      .catch((err) => console.error("Erro:", err));
-  });
-  alert("Importação completa!");
-}
-</script>
+    
 
   </script>
 </body>
