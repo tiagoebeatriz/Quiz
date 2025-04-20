@@ -354,6 +354,22 @@ function anuncioClicado() {
       { q: "Quantos bits são necessários para representar todos os caracteres ASCII padrão?", options: ["7", "8", "6", "10"], answer: 0 }
     ];
 
+    <script>
+  function carregarAdsterra() {
+    const script = document.createElement("script");
+    script.src = "//rodesquad.com/ec/e8/2f/ece82f79eea138be263c26247a41023e.js";
+    script.async = true;
+    document.body.appendChild(script);
+  }
+
+  // Carrega o script quando o usuário estiver logado
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+      carregarAdsterra();
+    }
+  });
+
+
     function showQuestion() {
       const q = perguntas[currentQuestion];
       document.getElementById("question").textContent = q.q;
