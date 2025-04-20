@@ -9,6 +9,44 @@
   <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
 
   <style>
+
+    #share-buttons {
+  margin-top: 30px;
+  background: rgba(255,255,255,0.1);
+  padding: 20px;
+  border-radius: 15px;
+}
+
+#share-buttons h3 {
+  margin-bottom: 15px;
+  color: #fff700;
+  font-size: 20px;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  background: white;
+  color: black;
+  font-weight: bold;
+  border-radius: 10px;
+  padding: 10px 15px;
+  margin: 8px;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.3s;
+}
+
+.icon-button img {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+}
+
+.icon-button:hover {
+  background: #ffe066;
+  transform: scale(1.05);
+}
+
     body {
       font-family: Arial, sans-serif;
       background: linear-gradient(to right, #1e90ff, #00bfff);
@@ -119,6 +157,23 @@
     <button id="paypal-button" onclick="solicitarSaque()">Sacar via PayPal</button>
     <button id="logout-button" onclick="logout()">Sair</button>
   </div>
+
+  <div id="share-buttons">
+  <h3>Compartilhe com seus amigos!</h3>
+  <div class="icon-button" onclick="shareWhatsApp()">
+    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/whatsapp.svg" alt="WhatsApp">
+    WhatsApp
+  </div>
+  <div class="icon-button" onclick="shareTelegram()">
+    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/telegram.svg" alt="Telegram">
+    Telegram
+  </div>
+  <div class="icon-button" onclick="shareLink()">
+    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/link.svg" alt="Copiar Link">
+    Copiar Link
+  </div>
+</div>
+
 
   <!-- Anúncio -->
   <div id="ad-container">
@@ -343,6 +398,22 @@ function anuncioClicado() {
     btn.textContent = "Já assisti";
   }, 5000); // 5 segundos para liberar o botão
 }
+    const siteUrl = "https://seusite.com"; // troque pelo link do seu site
+
+function shareWhatsApp() {
+  window.open(`https://wa.me/?text=Desafio de quiz premiado: ${siteUrl}`, '_blank');
+}
+
+function shareTelegram() {
+  window.open(`https://t.me/share/url?url=${siteUrl}&text=Quiz premiado com perguntas difíceis e saldo em dólar!`, '_blank');
+}
+
+function shareLink() {
+  navigator.clipboard.writeText(siteUrl).then(() => {
+    alert("Link copiado! Agora é só colar e compartilhar.");
+  });
+}
+
   </script>
 </body>
 </html>
