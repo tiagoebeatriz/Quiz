@@ -398,21 +398,26 @@ function anuncioClicado() {
     btn.textContent = "Já assisti";
   }, 5000); // 5 segundos para liberar o botão
 }
-    const siteUrl = "https://seusite.com"; // troque pelo link do seu site
+    <script>
+  const siteURL = "https://tiagoebeatriz.github.io/Quiz/";
 
-function shareWhatsApp() {
-  window.open(`https://wa.me/?text=Desafio de quiz premiado: ${siteUrl}`, '_blank');
-}
+  function shareWhatsApp() {
+    const message = encodeURIComponent("Desafio você a acertar perguntas muito difíceis e ainda ganhar dinheiro! Acesse: " + siteURL);
+    window.open("https://api.whatsapp.com/send?text=" + message, "_blank");
+  }
 
-function shareTelegram() {
-  window.open(`https://t.me/share/url?url=${siteUrl}&text=Quiz premiado com perguntas difíceis e saldo em dólar!`, '_blank');
-}
+  function shareTelegram() {
+    const message = encodeURIComponent("Desafio você a acertar perguntas difíceis e ganhar prêmios! Acesse agora: " + siteURL);
+    window.open("https://t.me/share/url?url=" + siteURL + "&text=" + message, "_blank");
+  }
 
-function shareLink() {
-  navigator.clipboard.writeText(siteUrl).then(() => {
-    alert("Link copiado! Agora é só colar e compartilhar.");
-  });
-}
+  function shareLink() {
+    navigator.clipboard.writeText(siteURL).then(() => {
+      alert("Link copiado com sucesso!");
+    });
+  }
+</script>
+
 
   </script>
 </body>
