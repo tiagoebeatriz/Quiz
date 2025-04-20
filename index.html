@@ -3,115 +3,312 @@
 <head>
   <meta charset="UTF-8">
   <title>Quiz Premiado</title>
-
   <!-- Metadados para redes sociais -->
-  <meta property="og:title" content="Quiz Premiado">
-  <meta property="og:description" content="Jogue e ganhe dinheiro de verdade respondendo perguntas difíceis!">
-  <meta property="og:image" content="https://raw.githubusercontent.com/tiagoebeatriz/Quiz/9b3e809174ac65e2e86bcf49ba627258ed1dc721/logo.png">
-  <meta property="og:url" content="https://tiagoebeatriz.github.io/Quiz/">
-  <meta name="twitter:card" content="summary_large_image">
+<meta property="og:title" content="Quiz Premiado">
+<meta property="og:description" content="Jogue e ganhe dinheiro de verdade respondendo perguntas difíceis!">
+<meta property="og:image" content="https://raw.githubusercontent.com/tiagoebeatriz/Quiz/9b3e809174ac65e2e86bcf49ba627258ed1dc721/logo.png">
 
+<meta property="og:url" content="https://tiagoebeatriz.github.io/Quiz/">
+<meta name="twitter:card" content="summary_large_image">
+
+  <!-- Firebase SDKs -->
+ <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js"></script>
+
+  
   <style>
+
+    #share-buttons {
+  margin-top: 30px;
+  background: rgba(255,255,255,0.1);
+  padding: 20px;
+  border-radius: 15px;
+}
+
+#share-buttons h3 {
+  margin-bottom: 15px;
+  color: #fff700;
+  font-size: 20px;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  background: white;
+  color: black;
+  font-weight: bold;
+  border-radius: 10px;
+  padding: 10px 15px;
+  margin: 8px;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.3s;
+}
+
+.icon-button img {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+}
+
+.icon-button:hover {
+  background: #ffe066;
+  transform: scale(1.05);
+}
+
     body {
       font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #1e90ff, #00bfff);
+      color: white;
       text-align: center;
-      background: linear-gradient(to right, #1e3c72, #2a5298);
-      color: #fff;
-      margin: 0;
-      padding: 0;
+      padding: 30px;
     }
-
-    #quiz-container {
+    #quiz-container, #auth-container {
       max-width: 600px;
       margin: auto;
-      background: #222;
+      background: rgba(0,0,0,0.2);
       padding: 20px;
-      border-radius: 10px;
-      margin-top: 50px;
-      box-shadow: 0 0 10px rgba(255,255,255,0.2);
-    }
-
-    .hidden {
+      border-radius: 15px;
       display: none;
     }
-
-    button {
-      background-color: #00b894;
-      color: white;
-      padding: 12px 20px;
-      margin: 10px;
-      border: none;
+    .question {
+      font-size: 24px;
+      margin-bottom: 20px;
+      animation: fadeIn 0.5s;
+    }
+    .option {
+      background: white;
+      color: #333;
+      padding: 10px;
+      margin: 10px 0;
       border-radius: 8px;
       cursor: pointer;
-      font-size: 16px;
-      transition: background-color 0.3s;
+      transition: background 0.3s;
     }
-
-    button:hover {
-      background-color: #019875;
+    .option:hover {
+      background: #d3d3d3;
     }
-
-    #question {
-      font-size: 20px;
-      margin: 20px 0;
-    }
-
-    #balance {
-      font-weight: bold;
-      margin-top: 10px;
+    #score-saldo {
+      margin-top: 20px;
       font-size: 18px;
     }
-
-    input[type="email"] {
-      padding: 10px;
+    #paypal-button, #logout-button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 18px;
+      background: #ffc439;
+      color: black;
       border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    #ad-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background: rgba(0,0,0,0.95);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+      color: white;
+      font-size: 24px;
+      flex-direction: column;
+    }
+    #ad-container a {
+      background: yellow;
+      color: black;
+      padding: 10px;
+      margin-top: 15px;
+      font-weight: bold;
       border-radius: 8px;
-      font-size: 16px;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
     }
   </style>
 </head>
 <body>
-  <div id="quiz-container">
-    <h1>Quiz Premiado</h1>
-    <div id="auth-section">
-      <input type="email" id="email" placeholder="Digite seu e-mail">
-      <br>
-      <button onclick="login()">Entrar</button>
-      <button onclick="signup()">Cadastrar</button>
-      <button onclick="recoverPassword()">Esqueci a Senha</button>
-    </div>
-    <div id="game-section" class="hidden">
-      <div id="question-container">
-        <div id="question"></div>
-        <div id="options"></div>
-      </div>
-      <div id="balance">Saldo: $0.00</div>
-      <button onclick="withdraw()">Sacar via PayPal</button>
-    </div>
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/Quiz/sw.js')
+      .then(function(reg) {
+        console.log("Service Worker registrado com sucesso!", reg);
+      }).catch(function(err) {
+        console.error("Erro ao registrar Service Worker:", err);
+      });
+  }
+</script>
+
+
+  <!-- Login/Cadastro -->
+  <div id="auth-container">
+    <h2>Login</h2>
+    <input id="email" placeholder="Email"><br><br>
+    <input id="senha" type="password" placeholder="Senha"><br><br>
+    <button onclick="login()">Entrar</button>
+    <button onclick="mostrarCadastro()">Criar Conta</button>
+    <p><a href="#" onclick="resetPassword()">Esqueceu a senha?</a></p>
   </div>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+  <div id="register-container" style="display:none;">
+    <h2>Criar Conta</h2>
+    <input id="reg-email" placeholder="Email"><br><br>
+    <input id="reg-senha" type="password" placeholder="Senha"><br><br>
+    <input id="reg-confirma" type="password" placeholder="Repetir Senha"><br><br>
+    <input id="reg-cidade" placeholder="Cidade"><br><br>
+    <input id="reg-estado" placeholder="Estado"><br><br>
+    <input id="reg-telefone" placeholder="Telefone"><br><br>
+    <button onclick="criarConta()">Cadastrar</button><br><br>
+    <a href="#" onclick="mostrarLogin()">Já tenho conta</a>
+  </div>
 
+  <!-- Quiz -->
+  <div id="quiz-container">
+    <h1>Quiz Premiado</h1>
+    <div class="question" id="question">Carregando pergunta...</div>
+    <div id="options"></div>
+    <div id="score-saldo">
+      Pontos: <span id="score">0</span> | Saldo: $<span id="saldo">0.00</span>
+    </div>
+    <button id="paypal-button" onclick="solicitarSaque()">Sacar via PayPal</button>
+    <button id="logout-button" onclick="logout()">Sair</button>
+  </div>
+
+  <div id="share-buttons">
+  <h3>Compartilhe com seus amigos!</h3>
+  <div class="icon-button" onclick="shareWhatsApp()">
+    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/whatsapp.svg" alt="WhatsApp">
+    WhatsApp
+  </div>
+  <div class="icon-button" onclick="shareTelegram()">
+    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/telegram.svg" alt="Telegram">
+    Telegram
+  </div>
+  <div class="icon-button" onclick="shareLink()">
+    <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/link.svg" alt="Copiar Link">
+    Copiar Link
+  </div>
+</div>
+
+
+  <!-- Anúncio -->
+  <div id="ad-container">
+    <p>Assista ao anúncio obrigatório:</p>
+    <p>Acesse o link abaixo para continuar:</p>
+<a id="link-anuncio" href="https://choadsoa.top/4/9227115" target="_blank" onclick="anuncioClicado()">Clique para assistir</a>
+<p>Clique no botão abaixo somente após assistir:</p>
+<button id="btn-assistido" disabled>Já assisti</button>
+
+  </div>
+
+  <!-- Sons -->
+  <audio id="som-acerto" src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_68571982ba.mp3" preload="auto"></audio>
+  <audio id="som-erro" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_3ff8b4c210.mp3" preload="auto"></audio>
+
+  <!-- Firebase e Funções -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCPinA4hvn9O6ZDuXXE8xlrqJn3Uf23fxU",
       authDomain: "quiz-game-e20c3.firebaseapp.com",
       projectId: "quiz-game-e20c3",
       storageBucket: "quiz-game-e20c3.appspot.com",
-      messagingSenderId: "561511796535",
-      appId: "1:561511796535:web:cbfdd43e6711bd9b19d683"
+      messagingSenderId: "79731980565",
+      appId: "1:79731980565:web:2c2eba3398a899acdfd11c"
     };
-
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    let currentUser = null;
+    document.addEventListener("DOMContentLoaded", () => {
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          document.getElementById("auth-container").style.display = "none";
+          document.getElementById("register-container").style.display = "none";
+          document.getElementById("quiz-container").style.display = "block";
+          showAd(() => showQuestion());
+        } else {
+          document.getElementById("auth-container").style.display = "block";
+          document.getElementById("register-container").style.display = "none";
+          document.getElementById("quiz-container").style.display = "none";
+        }
+      });
+    });
+
+    function login() {
+      const email = document.getElementById("email").value;
+      const senha = document.getElementById("senha").value;
+      auth.signInWithEmailAndPassword(email, senha)
+        .then(() => console.log("Login feito com sucesso"))
+        .catch(e => alert("Erro: " + e.message));
+    }
+
+    function criarConta() {
+      const email = document.getElementById("reg-email").value;
+      const senha = document.getElementById("reg-senha").value;
+      const confirma = document.getElementById("reg-confirma").value;
+      if (senha !== confirma) return alert("As senhas não conferem.");
+      auth.createUserWithEmailAndPassword(email, senha)
+        .then(() => alert("Conta criada com sucesso!"))
+        .catch(e => alert("Erro: " + e.message));
+    }
+
+    function resetPassword() {
+      const email = document.getElementById("email").value;
+      if (!email) return alert("Digite o e-mail para redefinir a senha.");
+      auth.sendPasswordResetEmail(email).then(() => alert("Email de recuperação enviado!")).catch(e => alert("Erro: " + e.message));
+    }
+
+    function logout() {
+      auth.signOut();
+    }
+
+    function mostrarCadastro() {
+      document.getElementById("auth-container").style.display = "none";
+      document.getElementById("register-container").style.display = "block";
+    }
+
+    function mostrarLogin() {
+      document.getElementById("auth-container").style.display = "block";
+      document.getElementById("register-container").style.display = "none";
+    }
+
+    function showAd(callback) {
+  document.getElementById("ad-container").style.display = "flex";
+  const botao = document.getElementById("btn-assistido");
+  botao.disabled = true;
+  botao.textContent = "Já assisti (bloqueado)";
+  
+  // Aguarda clique no link para liberar
+  botao.onclick = () => {
+    document.getElementById("ad-container").style.display = "none";
+    callback();
+  };
+}
+
+function anuncioClicado() {
+  const botao = document.getElementById("btn-assistido");
+  botao.disabled = true;
+  botao.textContent = "Verificando...";
+  
+  setTimeout(() => {
+    botao.disabled = false;
+    botao.textContent = "Já assisti";
+  }, 5000); // tempo mínimo de visualização
+}
+
+
+    function closeAd() {
+      document.getElementById("ad-container").style.display = "none";
+    }
+
+    // Quiz
+    let score = 0;
+    let saldo = 0.00;
     let currentQuestion = 0;
-    let balance = 0;
 
     const perguntas = [
       { q: "Qual é o número primo mais próximo de 10.000?", options: ["9973", "10007", "10009", "9999"], answer: 1 },
@@ -156,146 +353,107 @@
       { q: "Quem formulou as equações de Maxwell?", options: ["James Clerk Maxwell", "Faraday", "Ampère", "Tesla"], answer: 0 },
       { q: "O que é a constante de Euler-Mascheroni?", options: ["Limite entre a soma harmônica e o logaritmo", "Pi", "e", "Zero absoluto"], answer: 0 },
       { q: "Quantos bits são necessários para representar todos os caracteres ASCII padrão?", options: ["7", "8", "6", "10"], answer: 0 }
-    ];
 
+      ];
 
-    function shuffleAlternatives(q) {
-      const alternativas = [...q.alternativas];
-      const correta = alternativas[q.correta];
-      for (let i = alternativas.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [alternativas[i], alternativas[j]] = [alternativas[j], alternativas[i]];
-      }
-      return {
-        pergunta: q.pergunta,
-        alternativas: alternativas,
-        correta: alternativas.indexOf(correta)
-      };
+    
+  function carregarAdsterra() {
+    const script = document.createElement("script");
+    script.src = "//rodesquad.com/ec/e8/2f/ece82f79eea138be263c26247a41023e.js";
+    script.async = true;
+    document.body.appendChild(script);
+  }
+
+  // Carrega o script quando o usuário estiver logado
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+      carregarAdsterra();
     }
+  });
 
-    function renderQuestion() {
-      const shuffled = shuffleAlternatives(questions[currentQuestion]);
-      document.getElementById("question").innerText = shuffled.pergunta;
+
+    function showQuestion() {
+      const q = perguntas[currentQuestion];
+      document.getElementById("question").textContent = q.q;
       const optionsDiv = document.getElementById("options");
       optionsDiv.innerHTML = "";
-      shuffled.alternativas.forEach((alt, index) => {
-        const btn = document.createElement("button");
-        btn.innerText = alt;
-        btn.onclick = () => checkAnswer(index, shuffled.correta);
-        optionsDiv.appendChild(btn);
+      q.options.forEach((opt, i) => {
+        const div = document.createElement("div");
+        div.className = "option";
+        div.textContent = opt;
+        div.onclick = () => checkAnswer(i);
+        optionsDiv.appendChild(div);
       });
     }
 
-    function checkAnswer(selected, correct) {
-      if (selected === correct) {
-        balance += 0.10;
-        saveProgress();
-        alert("Acertou! +$0.10");
-        if ((currentQuestion + 1) % 2 === 0) {
+    function checkAnswer(selected) {
+      const q = perguntas[currentQuestion];
+      if (selected === q.answer) {
+        score++;
+        saldo += 0.10;
+        document.getElementById("som-acerto").play();
+        if (score % 2 === 0) {
           showAd(() => nextQuestion());
         } else {
           nextQuestion();
         }
       } else {
-        showAd(() => {
-          alert("Errou!");
-          nextQuestion();
-        });
+        document.getElementById("som-erro").play();
+        showAd(() => nextQuestion());
       }
+      document.getElementById("score").textContent = score;
+      document.getElementById("saldo").textContent = saldo.toFixed(2);
     }
 
     function nextQuestion() {
       currentQuestion++;
-      if (currentQuestion >= questions.length) {
+      if (currentQuestion >= perguntas.length) {
+        alert("Você completou todas as perguntas!");
         currentQuestion = 0;
       }
-      renderQuestion();
+      showQuestion();
     }
 
-    function showAd(callback) {
-      alert("Assista ao anúncio...");
-      setTimeout(callback, 3000);
-    }
+    function solicitarSaque() {
+      const email = auth.currentUser.email;
+      db.collection("saques").add({
+        email: email,
+        valor: saldo,
+        data: new Date().toISOString()
+      }).then(() => {
+        alert("Solicitação enviada! Pagamento em até 24h.");
+        saldo = 0;
+        document.getElementById("saldo").textContent = saldo.toFixed(2);
+      }).catch(e => alert("Erro ao solicitar saque: " + e.message));
+    }  
+    function anuncioClicado() {
+  const btn = document.getElementById("btn-assistido");
+  btn.disabled = true;
+  btn.textContent = "Aguardando...";
+  setTimeout(() => {
+    btn.disabled = false;
+    btn.textContent = "Já assisti";
+  }, 5000); // 5 segundos para liberar o botão
+}
+    
+  const siteURL = "https://tiagoebeatriz.github.io/Quiz/";
 
-    function updateBalanceUI() {
-      document.getElementById("balance").innerText = `Saldo: $${balance.toFixed(2)}`;
-    }
+  function shareWhatsApp() {
+    const message = encodeURIComponent("Desafio você a acertar perguntas muito difíceis e ainda ganhar dinheiro! Acesse: " + siteURL);
+    window.open("https://api.whatsapp.com/send?text=" + message, "_blank");
+  }
 
-    function login() {
-      const email = document.getElementById("email").value;
-      auth.signInWithEmailAndPassword(email, "123456")
-        .then((user) => {
-          currentUser = user.user;
-          startGame();
-        })
-        .catch(() => alert("Erro ao entrar. Cadastre-se se ainda não tem conta."));
-    }
+  function shareTelegram() {
+    const message = encodeURIComponent("Desafio você a acertar perguntas difíceis e ganhar prêmios! Acesse agora: " + siteURL);
+    window.open("https://t.me/share/url?url=" + siteURL + "&text=" + message, "_blank");
+  }
 
-    function signup() {
-      const email = document.getElementById("email").value;
-      auth.createUserWithEmailAndPassword(email, "123456")
-        .then((user) => {
-          currentUser = user.user;
-          saveProgress(); // novo usuário
-          startGame();
-        })
-        .catch(() => alert("Erro ao cadastrar."));
-    }
-
-    function recoverPassword() {
-      const email = document.getElementById("email").value;
-      auth.sendPasswordResetEmail(email)
-        .then(() => alert("E-mail de recuperação enviado!"))
-        .catch(() => alert("Erro ao enviar recuperação."));
-    }
-
-    function startGame() {
-      document.getElementById("auth-section").classList.add("hidden");
-      document.getElementById("game-section").classList.remove("hidden");
-      loadProgress();
-    }
-
-    function saveProgress() {
-      if (!currentUser) return;
-      db.collection("usuarios").doc(currentUser.uid).set({
-        saldo: balance,
-        pergunta: currentQuestion
-      });
-    }
-
-    function loadProgress() {
-      if (!currentUser) return;
-      db.collection("usuarios").doc(currentUser.uid).get()
-        .then(doc => {
-          if (doc.exists) {
-            const data = doc.data();
-            balance = data.saldo || 0;
-            currentQuestion = data.pergunta || 0;
-          }
-          updateBalanceUI();
-          renderQuestion();
-        });
-    }
-
-    function withdraw() {
-      const email = prompt("Digite seu e-mail do PayPal:");
-      if (email) {
-        db.collection("saques").add({
-          uid: currentUser.uid,
-          email: email,
-          valor: balance,
-          data: new Date()
-        });
-        alert("Pedido de saque enviado!");
-      }
-    }
-
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        currentUser = user;
-        startGame();
-      }
+  function shareLink() {
+    navigator.clipboard.writeText(siteURL).then(() => {
+      alert("Link copiado com sucesso!");
     });
+  }
+   
   </script>
 </body>
 </html>
